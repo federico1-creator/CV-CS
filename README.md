@@ -1,6 +1,4 @@
 # vision project
  computer vision project
 
- gruppo per l'esame
-
-ciao
+ gruppo 16: per l'esame
