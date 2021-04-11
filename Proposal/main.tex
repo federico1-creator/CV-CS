@@ -1,0 +1,92 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{natbib}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{geometry}
+
+\geometry{a4paper,top=3cm,bottom=3cm,left=3cm,right=3cm,%
+heightrounded,bindingoffset=5mm}
+
+\title{Proposal: Project Computer Vision}
+%\author{EROS BIGNARDI, FEDERICO COCCHI, RICCARDO AGAZZOTTI}
+\author{
+    \textsc{Riccardo Agazzotti} \\[1ex]
+    \normalsize \href{mailto:244836@studenti.unimore.it}{244836@studenti.unimore.it}
+    \and
+    \textsc{Eros Bignardi} \\[1ex]
+    \normalsize \href{mailto:289842@studenti.unimore.it}{240696@studenti.unimore.it} 
+    \and
+    \\[1ex]
+    \textsc{Federico Cocchi} \\[1ex]
+    \normalsize \href{mailto:289842@studenti.unimore.it}{289842@studenti.unimore.it}
+    \\[1ex]
+    }
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\begin{abstract}
+    \noindent \textit{Tecniche di Computer Vision a supporto della vendita online di capi di abbigliamento} 
+    \newline
+    \newline
+    \noindent L'e-Commerce crea nuove possibilità e canali di vendita non solo per le grandi aziende, 
+    ma soprattutto per le piccole aziende che tramite queste metodologie di vendita possono raggiungere un vasto pubblico situato in tutto il mondo a cui offrire i loro prodotti. 
+    La pandemia attuale non ha fatto altro che spingere tale processo. \\
+    Da questa situazione il made in italy può trovare un particolare vantaggio per affermarsi anche in nuovi mercati.
+    Quanto descritto si applica anche per i prodotti alla persona, quali i capi di abbigliamento, che vengono sempre più venduti online. 
+    Per queste tipologie di merce un problema della vendita online è quello di non poter provare il capo, confrontarlo con altri e selezionare correttamente la taglia. \\
+    Proprio in quest'ottica il progetto si pone l'obiettivo di facilitare la scelta dei capi a distanza.
+    La nostra idea è quella di implementare una pipeline che ci permetta, a partire da un'immagine di una persona, di individuare la posizione ed il tipo di abiti che indossa.
+    Per individuare i tipi di abiti è necessario eseguire una loro classificazione dopo aver riconosciuto le specifiche forme dei vari capi. \\
+    Dall'immagine di un capo di abbigliamento si può inoltre estrarre un feature vector che rappresenta le sue caratteristiche.
+    Da queste utilizzando una misura di similarità si possono individuare altri abiti con caratteristiche comuni da andare a suggerire all'acquirente.
+    Tale processo permette di suggerire al cliente alternative al suo outfit.
+    %Da ciò si possono suggerire abiti 'vicini' a quelli individuati nella figura iniziale.
+    L'ultimo passo della pipeline è quello di utilizzare questi abiti 'vicini' per sostituirli sull'immagine,
+    come se la persona li stesse provando in maniera virtuale.
+    
+    %In un mondo in cui il commercio elettronico è in costante aumento il settore della moda
+\end{abstract}
+\pagebreak
+
+\section{Pipeline}
+ 
+\subsection{Image Processing}
+\begin{itemize}
+\item Applicazione di eventuali filtri sull'immagine
+\item Segmentazione della persona e dei vari abiti indossati 
+\end{itemize}
+
+\subsection{Geometry Algorithm}
+\begin{itemize}
+\item Trovare le misure corporee della persona per selezionare la taglia corretta
+\item Dall'immagine di partenza rendere riconoscibile i singoli capi, anche se la persona che lo indossa assume delle posizioni che non permettono la visione completa del capo
+\item Modellazione e trasformazione dei vestiti per permettere di sovrapporli al corpo del soggetto, in base alla posizione assunta, creando l'immagine finale.
+\end{itemize}
+
+\subsection{Retrieval Algorithm}
+\begin{itemize}
+\item \textit{Identificazione parti corpo (busto, gambe e testa)}
+\item Identificazione di tutti gli indumenti nella foto e loro classificazione
+\item \textit{Identificazione del brand indossato -- template matching}
+\end{itemize}
+
+\subsection{Neural Networks and Deep Learning}
+\begin{itemize}
+\item Classificazione degli elementi principali \textit{(vestito lungo, maglia, pantaloni, scarpe e diversi accessori)}
+\item Suggerire e trovare gli elementi simili rispetto a quelli indossati
+\item Sviluppare una rete che permetta di far indossare alla persona l'abito finale nell'immagine
+\end{itemize}
+
+\subsection{Dataset}
+La nostra idea è nata anche dalla possibilità presentata dalla Prof. Cucchiara a lezione, di poter lavorare su un dataset di immagini di abiti e vestiti in possesso dell'università. 
+\\ [4ex]
+
+\section{Why we select this project}
+Proponiamo questo progetto perchè richiede l'utilizzo delle varie tecniche studiate durante il corso 
+ed in secondo luogo perchè risponde ad un fabbisogno concreto che è sempre più sentito, sia da parte dei venditori che dai clienti finali.
+
+\end{document}
