@@ -10,16 +10,19 @@ def show(H, W, image):
     cv2.imshow('image resized', resized)
     cv2.waitKey(0)
     # imS = cv2.resize(image, (960, 540))
-
-def openimage():# aprire l'immagine
-    image= cv2.imread('data-prova/fede.jpg') # 0
+    
+def openimage():# aprire l'immagine dataset di dimensioni 1024,768
+    image= cv2.imread('data-prova\\12141279ui_0_r.jpg', 0) # 0
     print(image.shape)
     pres()
 
+    cv2.imshow('image', image)
+    cv2.waitKey(0)
+    '''
     plt.imshow(image)
     plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
     plt.show()
-
+    '''
     # resize operation
     height = int(image.shape[0] * 20 / 100)
     width = int(image.shape[1] * 20 / 100)
