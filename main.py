@@ -12,14 +12,12 @@ def showRes(H, W, image):
     cv2.waitKey(0)
     # imS = cv2.resize(image, (960, 540))
 
-def show(image): # da togliere dalle funzioni per personalizzare la schermata   {1}
-    cv2.imshow('image to show', image)
-    cv2.waitKey(0)
-
 def openimage():# aprire l'immagine dataset di dimensioni 1024,768
     image= cv2.imread('data-prova\\12141279ui_0_r.jpg') # 0
+    # img= cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     pres()
-    show(image)
+    cv2.imshow('imported image', image)
+    cv2.waitKey(0)
     '''
     plt.imshow(image)
     plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
@@ -43,19 +41,23 @@ def sogliaRGB(image):
         low = (0, 127, 0) # normale threshold
         high = (127, 255, 255)
         mask = cv2.inRange(image, low, high)
-        show(mask)
+
+        cv2.imshow('threshold in RGB', mask)
+        cv2.waitKey(0)
 
         th = np.zeros((image.shape[0], image.shape[1], image.shape[2])) # adaptive threshold (1024, 768, 3)
         for i in range(image.shape[2]):
             th[:, :, i] = cv2.adaptiveThreshold(image[:, :, i], 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11,
                                                     0)
-        show(th)
+        cv2.imshow('adaptive threshold in RGB', th)
+        cv2.waitKey(0)
 
 def soglia(image):
     # 0
     _, thresh0 = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
     # thresh= cv2.resize(thresh, (592,592))
-    show(thresh0)
+    cv2.imshow('static threshold', thresh0)
+    cv2.waitKey(0)
 
     try:
         image.shape[2]
@@ -64,16 +66,38 @@ def soglia(image):
 
         # 1
         ret1, thresh1 = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
         print('Soglia usata:', ret1)
-        show(thresh1)
+        cv2.imshow('OTSUs threshold', thresh1)
+        cv2.waitKey(0)
         # 2
         blur = cv2.GaussianBlur(image, (5, 5), 0)
         ret2, thresh2 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        show(thresh2)
+
+        cv2.imshow('OTSU + blur', thresh2)
+        cv2.waitKey(0)
         # 3
         thresh3 = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 0)
-        show(thresh3)
 
+        cv2.imshow('adaptive threshold', thresh3)
+        cv2.waitKey(0)
+
+def canny(image):
+    image= cv2.Canny(image, 100, 200)
+    cv2.imshow('image with Canny', image)
+    cv2.waitKey(0)
+
+def sobel(image):
+    kernel = torch.tensor([[[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], [[1, 2, 1], [0, 0, 0], [-1, -2, -1]]])
+
+    sobel_horizontal = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)
+    sobel_vertical = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)
+
+    cv2.imshow('sobel hor', sobel_horizontal)
+    cv2.waitKey(0)
+    cv2.imshow('sobel ver', sobel_vertical)
+    cv2.waitKey(0)
+    # together
 
 if __name__ == "__main__":
     print('Inizio progetto')
@@ -85,5 +109,6 @@ if __name__ == "__main__":
     sogliaRGB(image)
 
     # SOBEL
-
+    sobel(image)
     # CANNY
+    canny(image)
