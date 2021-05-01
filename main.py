@@ -1,6 +1,5 @@
 # file iniziale
-# TODO: HOG;
-# da completare: template matching, contour (con il concetto di hierarchy)
+# TODO: HOG, contour (con il concetto di hierarchy)
 import torch
 import cv2  # BGR order
 import numpy as np
@@ -11,8 +10,9 @@ import skimage.segmentation
 
 def showRes(H, W, image):
     resized = cv2.resize(image, (W, H), interpolation=cv2.INTER_AREA)
-    cv2.imshow('image resized', resized)
-    cv2.waitKey(0)
+    #cv2.imshow('image resized', resized)
+    #cv2.waitKey(0)
+
     # imS = cv2.resize(image, (960, 540))
 
 
@@ -50,7 +50,7 @@ def colors():
     c[9] = 255
     return c
 
-
+# util in the template matching
 def resize(image, scale):
     # resize operation
     height = int(image.shape[0] * scale // 10)
@@ -61,6 +61,26 @@ def resize(image, scale):
     print(resized.shape)
     return resized
 
+def morp_closing(image, dimker=5):
+    # remove holes
+    kernel = np.ones((dimker, dimker), np.uint8)
+    closing = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel, iterations=2)
+    cv2.imshow('closing', closing)
+    cv2.waitKey(0)
+    return closing
+
+def morp_dilate(image, dimker=5):
+    # sure background area
+    kernel = np.ones((dimker, dimker), np.uint8)
+    sure_bg = cv2.dilate(image, kernel, iterations=3)
+    cv2.imshow('dilate', sure_bg)
+    cv2.waitKey(0)
+    return sure_bg
+
+def morp_OpeningErosion(image):
+    # Opening: rimuove il rumore nell'immagine
+    # Erosion: immagine più sottile
+    pass
 
 def hist(im, nbin):
     print(im.shape)
@@ -130,6 +150,8 @@ def canny(image):
     image = cv2.Canny(image, 100, 200)  # 180, 600
     cv2.imshow('image with Canny', image)
     cv2.waitKey(0)
+
+    return image
 
 
 def sobel(image):
@@ -321,10 +343,53 @@ def hog(image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+def noise(image):
+    gaussian = cv2.GaussianBlur(image, (5, 5), 0)
+    blurring= cv2.medianBlur(image,5)
+    bilateral= cv2.bilateralFilter(image,9,75,75)
 
-def segmentation(img):
-    segment_mask1 = skimage.segmentation.felzenszwalb(img, scale=100)
-    segment_mask2 = skimage.segmentation.felzenszwalb(img, scale=1000)
+    plt.subplot(221), plt.imshow(image), plt.title('Original image')
+    plt.subplot(222), plt.imshow(gaussian), plt.title('Gaussian filter')
+    plt.subplot(223), plt.imshow(blurring), plt.title('Blurred filter')
+    plt.subplot(224), plt.imshow(bilateral), plt.title('Bilateral filter')
+    plt.show()
+
+    return gaussian
+
+def box1(image):
+    #c=cv2.cvtColor(c, cv2.COLOR_GRAY2RGB) #(,,3)
+    itemindex = np.where(image == 255)
+
+    posx = []
+    posy = []
+    posx.append(itemindex[0][0])
+    posy.append(itemindex[1][0])
+    posx.append(itemindex[0][-1])
+    posy.append(itemindex[1][-1])
+
+    cv2.rectangle(image, (posx[0], posy[0]), (posx[1], posy[1]), 127, 2)
+    cv2.imshow('rettangolo', image)
+    cv2.waitKey(0)
+
+def box2(image):
+    # TODO: problem, with the findContours
+    coun, _= cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # c
+    print('m',coun.shape)
+    for c in coun:
+        x,y,w,h= cv2.boundingRect(c)
+        if w>10 and h>10:
+            cv2.rectangle(c, (x,y), (x+w, y+h), 127, 2)
+    #cv2.imshow()
+    print(c)
+    #plt.imshow(c)
+    #plt.show()
+
+def segmentation(img): # da mettere un .
+    # pulire da rumore
+    #img= noise(img)
+    # result with 1 channels
+    segment_mask1 = skimage.segmentation.felzenszwalb(img, scale=100) # 575 max value
+    segment_mask2 = skimage.segmentation.felzenszwalb(img, scale=1000) # 100 max value
 
     fig = plt.figure(figsize=(12, 5))
     ax1 = fig.add_subplot(121)
@@ -336,6 +401,42 @@ def segmentation(img):
     fig.suptitle("Felsenszwalb's efficient graph based image segmentation")
     plt.tight_layout()
     plt.show()
+
+    plt.subplot(121),   plt.hist(segment_mask1)
+    plt.title('Hist 1')
+    plt.subplot(122), plt.title('Hist 2')
+    plt.hist(segment_mask2)
+    plt.show()
+    '''
+    # cut mask1 consider only low values
+    segment_mask1[segment_mask1>120]= 0
+    plt.imshow(segment_mask1)
+    plt.show()
+    
+    plt.hist(segment_mask1)
+    plt.title('maschera1 tagliata nella parte superiore')
+    plt.show()
+    '''
+    c=segment_mask1
+    c[c>80]=0
+    c[c < 40] = 0
+    plt.imshow(c) # per togliere bordi che non so: dilation, CLOSING (morphology)
+    plt.show()
+    #mask with 0,1 in the image
+    #_, c= cv2.threshold(np.array(c, dtype=np.float32), 127, 255, cv2.THRESH_BINARY_INV)
+    c[c != 0] = 255
+    print('valori unici:\t',np.unique(c))
+    c= np.array(c, dtype=np.float32)
+    cv2.imshow('prova', c)
+    cv2.waitKey(0)
+
+    # MORP
+    morp_closing(c)
+    dil= morp_dilate(c)
+    # draw rectangle
+    box1(c)
+    input()
+    box2(c) # problem
 
 
 if __name__ == "__main__":
@@ -359,6 +460,7 @@ if __name__ == "__main__":
     # TEMPLATE MATCHING
     # col = colors()
     # template(image, image2, col)  # resize
+
     segmentation(image)
 
     # Create display windows
@@ -373,6 +475,7 @@ if __name__ == "__main__":
 
     # HOG with people detection
     hog(image)
+
 
 ''' parametri Canny
     image_gray= cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
