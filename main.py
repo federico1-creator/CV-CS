@@ -153,7 +153,6 @@ def canny(image):
 
     return image
 
-
 def sobel(image):
     # kernel = torch.tensor([[[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], [[1, 2, 1], [0, 0, 0], [-1, -2, -1]]])
 
@@ -198,38 +197,43 @@ def edgeHSV(im):
     plt.imshow(final)  # (126, 126, 3)
     plt.show()
 
-
 def contour(image):
-    image_copy = image.copy()
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    image_copy = image.copy() # BGR
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) # gray scale
 
-    # faccio prove con contorni
-    image = cv2.Canny(image, threshold1=100, threshold2=200)  # immagine diventa ad unico canale, lavorare sui parametri
-    # _, image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+    # creo contorni
+    image= cv2.Canny(image, threshold1=100, threshold2=200) # immagine diventa ad unico canale, lavorare sui parametri
+    #_, image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
 
-    # RETR_LIST se non uso la gerarchia, # RETR_
+    #RETR_LIST se non uso la gerarchia, # RETR_
     contours, hierarchy = cv2.findContours(image=image,
-                                           mode=cv2.RETR_EXTERNAL,
-                                           method=cv2.CHAIN_APPROX_SIMPLE)  # con _NONE valore di 600
+                                           mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE) # con _NONE valore di 600
 
-    hierarchy = np.squeeze(hierarchy)
-    print(hierarchy)
-    # j=0
+    print(len(contours))  # list
+    print(contours[88].shape)  # il primo valore indica il numero di punti del contorno
+    # devo avere una FORMA CHIUSA PER DISEGNARE IL RETTANGOLO
+    '''
+    x, y, w, h = cv2.boundingRect(cnt)
+    cv2.rectangle(image_copy, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    '''
+    hierarchy= np.squeeze(hierarchy)
+    # TODO: capire come poter usare la gerarchia , che viene stampata sotto
+    # print(hierarchy)
+    j=0
     c = []
     for i in range(len(contours)):
-        if contours[i].shape[0] >= 200:  # deve avere dimensione precisa dei valori utulizzati
+        if contours[i].shape[0] >= 200: # deve avere dimensione precisa dei valori utulizzati
             c.append(contours[i])
-            # j=j+1
+            j=j+1
     '''
     h = np.zeros((j+1, 4))
     for i in range(len(contours)):
         if contours[i].shape[0] >= 200:
             h[i]= hierarchy[i]
     '''
-    cv2.drawContours(image=image_copy, contours=contours, contourIdx=-1,  # contours=c
+    cv2.drawContours(image=image_copy, contours=contours, contourIdx=-1,
                      color=(0, 255, 0), thickness=2, lineType=cv2.LINE_AA)
-
-    cv2.imshow('vediamo', image_copy)
+    cv2.imshow('contorni', image_copy) # sull'immagine a colori
     cv2.waitKey(0)
 
 
@@ -373,6 +377,7 @@ def box1(image):
 
 def box2(image):
     # TODO: problem, with the findContours
+    # serve per disegnare bordi o rettangolo con funzioni
     coun, _= cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # c
     print('m',coun.shape)
     for c in coun:
@@ -455,7 +460,7 @@ if __name__ == "__main__":
     # canny(image)
     # edge with colors
     # edgeHSV(image)
-    # CONTOURS
+    # CONTOURS of the image
     # contour(image)
     # TEMPLATE MATCHING
     # col = colors()
