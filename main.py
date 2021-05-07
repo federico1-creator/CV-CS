@@ -417,7 +417,6 @@ def segmentation(img): # da mettere un .
     segment_mask1[segment_mask1>120]= 0
     plt.imshow(segment_mask1)
     plt.show()
-    
     plt.hist(segment_mask1)
     plt.title('maschera1 tagliata nella parte superiore')
     plt.show()
@@ -427,8 +426,6 @@ def segmentation(img): # da mettere un .
     c[c < 40] = 0
     plt.imshow(c) # per togliere bordi che non so: dilation, CLOSING (morphology)
     plt.show()
-    #mask with 0,1 in the image
-    #_, c= cv2.threshold(np.array(c, dtype=np.float32), 127, 255, cv2.THRESH_BINARY_INV)
     c[c != 0] = 255
     print('valori unici:\t',np.unique(c))
     c= np.array(c, dtype=np.float32)
@@ -438,9 +435,8 @@ def segmentation(img): # da mettere un .
     # MORP
     morp_closing(c)
     dil= morp_dilate(c)
-    # draw rectangle
+    # draw rectangle in 2 different ways
     box1(c)
-    input()
     box2(c) # problem
 
 
@@ -462,9 +458,9 @@ if __name__ == "__main__":
     # edgeHSV(image)
     # CONTOURS of the image
     # contour(image)
-    # TEMPLATE MATCHING
-    # col = colors()
-    # template(image, image2, col)  # resize
+    # TEMPLATE MATCHING con le diverse dimensioni del template
+    col = colors()
+    #template(image, image2, col)  # resize
 
     segmentation(image)
 
