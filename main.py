@@ -1,5 +1,7 @@
-# file iniziale
-# TODO: HOG, contour (con il concetto di hierarchy)
+'''file iniziale
+
+HOG per il nostro caso può essere utile?
+'''
 import torch
 import cv2  # BGR order
 import numpy as np
@@ -16,9 +18,9 @@ def showRes(H, W, image):
     # imS = cv2.resize(image, (960, 540))
 
 
-def openimage():  # aprire l'immagine dataset di dimensioni 1024,768
-    image = cv2.imread('data-prova\\12141279ui_0_r.jpg')  # 0
-    # img= cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+def openimage(path):  # aprire l'immagine dataset di dimensioni 1024,768
+    image = cv2.imread(path)  # 0
+    img= cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     pres()
     cv2.imshow('imported image', image)
     cv2.waitKey(0)
@@ -27,13 +29,13 @@ def openimage():  # aprire l'immagine dataset di dimensioni 1024,768
     plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
     plt.show()
     '''
-    # resize operation
+    # resize operation NOT USED
     height = int(image.shape[0] * 20 / 100)
     width = int(image.shape[1] * 20 / 100)
     showRes(height, width, image)
 
     cv2.imwrite('output/copy.png', image)
-    return image, height, width
+    return image, height, width, img
 
 
 def colors():
@@ -140,7 +142,7 @@ def soglia(image):
         cv2.imshow('OTSU + blur', thresh2)
         cv2.waitKey(0)
         # 3
-        thresh3 = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 0)
+        thresh3 = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 0) # blockSize=50
 
         cv2.imshow('adaptive threshold', thresh3)
         cv2.waitKey(0)
@@ -360,34 +362,78 @@ def noise(image):
 
     return gaussian
 
-def box1(image):
-    #c=cv2.cvtColor(c, cv2.COLOR_GRAY2RGB) #(,,3)
-    itemindex = np.where(image == 255)
 
-    posx = []
-    posy = []
-    posx.append(itemindex[0][0])
-    posy.append(itemindex[1][0])
-    posx.append(itemindex[0][-1])
-    posy.append(itemindex[1][-1])
+def kmeans(image):
 
-    cv2.rectangle(image, (posx[0], posy[0]), (posx[1], posy[1]), 127, 2)
-    cv2.imshow('rettangolo', image)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Change color to RGB (from BGR)
+    pixel_vals = image.reshape((-1, 3)) # Reshaping the image into a 2D array of pixels and 3 color values (RGB)
+    pixel_vals = np.float32(pixel_vals) # Convert to float type only for supporting cv2.kmean
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.85)  # criteria
+    k = 4  ### Choosing number of cluster
+    retval, labels, centers = cv2.kmeans(pixel_vals, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+    # LABELS: ha la classe per ogni pixel, con dimensione spiattellata
+    centers = np.uint8(centers)  # convert data into 8-bit values
+    segmented_data = centers[labels.flatten()]  # Mapping labels to center points( RGB Value)
+    segmented_image = segmented_data.reshape((image.shape))  # reshape data into the original image dimensions
+    plt.imshow(segmented_image)
+    plt.title('k=4')
+    plt.show()
+
+def dress(image2):
+    # trovato bordi e contorni, da mettere box intorno all'elemento, fatto in 2 modi.
+
+    # immagine a colori with CANNY
+    image_copy= image2.copy() # per avere i bbox non sovrapposti sulla stessa immagine
+    image = cv2.Canny(image2, threshold1=100, threshold2=200)
+    cv2.imshow('Canny', image)
     cv2.waitKey(0)
 
-def box2(image):
-    # TODO: problem, with the findContours
-    # serve per disegnare bordi o rettangolo con funzioni
-    coun, _= cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # c
-    print('m',coun.shape)
+    coun, _ = cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # with dtype=uint8
+    pos1 = []  # posizione del vestito nell'immagine
     for c in coun:
-        x,y,w,h= cv2.boundingRect(c)
-        if w>10 and h>10:
-            cv2.rectangle(c, (x,y), (x+w, y+h), 127, 2)
-    #cv2.imshow()
-    print(c)
-    #plt.imshow(c)
-    #plt.show()
+        x, y, w, h = cv2.boundingRect(c)
+        if w > 120 and h > 120:  # per filtrare i bordi      # w > 170
+            dress1 = cv2.rectangle(image_copy, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            pos1.append([x, y, w, h])
+    cv2.imshow('bbox with Canny', dress1)
+    cv2.waitKey(0)
+
+    # gray image with OTSU
+    image_gray= cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+    ret1, thresh1 = cv2.threshold(image_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    print('Soglia usata:', ret1)
+    cv2.imshow('OTSU', thresh1)
+    cv2.waitKey(0)
+
+    coun, _ = cv2.findContours(thresh1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    pos2=[] # posizione del vestito nell'immagine
+    for c in coun:
+        x, y, w, h = cv2.boundingRect(c)
+        if (w > 120 and h > 120) and (x!=0 and y!=0) : # per filtrare i bordi
+            dress2 = cv2.rectangle(image2, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            pos2.append([x, y, w, h])
+    cv2.imshow('bbox with OTSU', dress2)
+    cv2.waitKey(0)
+    return pos1
+
+def box2(image):
+    # immagine in gray scale
+    print(image)
+    # disegnare rettangolo
+    #image= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image = image.astype(np.uint8)
+    coun, _= cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    pos= []
+    for c in coun:
+        # bbox = cv2.arcLength(c, True)
+        x,y,w,h= cv2.boundingRect(c) # bbox
+        if w>20 and h>20:
+            dresspart= cv2.rectangle(image, (x,y), (x+w, y+h), 127, 2)
+            pos.append([x, y, w, h])
+
+    cv2.imshow('parte del vestito', dresspart)
+    cv2.waitKey(0)
+    return pos
 
 def segmentation(img): # da mettere un .
     # pulire da rumore
@@ -407,8 +453,8 @@ def segmentation(img): # da mettere un .
     plt.tight_layout()
     plt.show()
 
-    plt.subplot(121),   plt.hist(segment_mask1)
-    plt.title('Hist 1')
+    plt.subplot(121), plt.title('Hist 1')
+    plt.hist(segment_mask1)
     plt.subplot(122), plt.title('Hist 2')
     plt.hist(segment_mask2)
     plt.show()
@@ -421,34 +467,42 @@ def segmentation(img): # da mettere un .
     plt.title('maschera1 tagliata nella parte superiore')
     plt.show()
     '''
-    c=segment_mask1
-    c[c>80]=0
-    c[c < 40] = 0
+    # TODO: come scegliere la scala considerando histogram
+    c=segment_mask1 # con mask2
+    c[c>80]=0 # c>30
+    c[c < 40] = 0 # c<10
     plt.imshow(c) # per togliere bordi che non so: dilation, CLOSING (morphology)
     plt.show()
-    c[c != 0] = 255
+    c[c != 0] = 255  # {1}
     print('valori unici:\t',np.unique(c))
     c= np.array(c, dtype=np.float32)
-    cv2.imshow('prova', c)
+    cv2.imshow('prova', c) # valuto il risultato ottenuto
     cv2.waitKey(0)
 
-    # MORP
-    morp_closing(c)
-    dil= morp_dilate(c)
-    # draw rectangle in 2 different ways
-    box1(c)
-    box2(c) # problem
+    # MORPHOLOGY
+    clos= morp_closing(c)
+    dil= morp_dilate(clos)
+
+    pos= box2(dil) # oppure c
+    return pos
 
 
 if __name__ == "__main__":
     print('Inizio progetto')
-    image, H, W = openimage()  # immagine aperta nell'oggetto image
+    path= 'data-prova\\12141279ui_0_r.jpg'
+    #path = 'data-prova\\38814303li_0_e.jpg'
+    image, H, W, image_gray= openimage(path=path)  # immagine aperta nell'oggetto image
     image2 = cv2.imread('data-prova\\12141279ui_1_f.jpg')
+
+    # detect della forma dell'abito nella situazione che ci sia solo lui
+    pos_image= dress(image2)
+
     # print(image.shape)
     # HIST
     # hist(image, 10)
     # SOGLIE
-    # soglia(image) # thresh: immagine dove applicata la soglia
+    # soglia(image) # thresh, lavora con gray images
+    # soglia(image_gray)
     # sogliaRGB(image)
     # SOBEL
     # sobel(image)
@@ -462,7 +516,13 @@ if __name__ == "__main__":
     col = colors()
     #template(image, image2, col)  # resize
 
-    segmentation(image)
+    kmeans(image) # k-means sui colori
+
+    bbox_position = segmentation(image)
+    for x,y,w,h in bbox_position:
+        dresspart = cv2.rectangle(image, (x, y), (x + w, y + h), 127, 2)
+    cv2.imshow('parte del vestito', dresspart)
+    cv2.waitKey(0)
 
     # Create display windows
     cv2.namedWindow("Edges")
