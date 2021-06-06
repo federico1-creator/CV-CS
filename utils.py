@@ -1,6 +1,7 @@
 print('file con le varie funzioni')
 import numpy as np
 import cv2
+import torch
 
 def pres():
     print('funzioni')
@@ -45,3 +46,63 @@ def water(image, thresh):
     cv2.imshow('final', image)
     cv2.waitKey(0)
 
+def drawing_bbox(image, mask):
+    print('disegno del bbox')
+
+    mask = cv2.Canny(mask, threshold1=100, threshold2=200)
+    coun, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # with dtype=uint8
+    pos1 = []  # posizione del vestito nell'immagine
+    for c in coun:
+        x, y, w, h = cv2.boundingRect(c)
+        if w > 120 and h > 120:  # per filtrare i bordi      # w > 170
+            dress1 = cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            pos1.append([x, y, w, h])
+
+    # restituisco i pixel dove si trova la maglietta
+    cv2.imshow('bbox with Canny', dress1)
+    cv2.waitKey(0)
+    return x, y, w, h
+
+
+def extract_mask(mask, image):
+    # quando devo estrarre dalla maschera solo una classe che mi interessa
+    cv2.imshow('mask', mask)
+    cv2.waitKey(0)
+
+    mask= torch.as_tensor(mask)
+    uniq=mask[:,:,:].unique()
+    print(mask.shape)
+    print(uniq)
+
+    h, w, c = mask.shape
+    restructured= torch.zeros(h,w,c)
+    val=[128, 0, 0] # rappresenta il colore blu, problema con i colori che hanno una parte di blu (128 nel primo canale)
+    if mask.shape[2]==3:
+        stesa0 = mask[:, :, 0].reshape(-1,1)
+        stesa1 = mask[:, :, 1].reshape(-1, 1)
+        stesa2 = mask[:, :, 2].reshape(-1, 1)
+
+    for j in range(len(stesa0)): # da mettere con condizione (and) per vedere se altri 2 canali con valori del colore che voglio
+        if (stesa0[j] == val[0]) and (stesa1[j] == val[1]) and (stesa2[j] == val[2]):  # da selezionare il codice del colore RGB esatto
+            stesa0[j] = 128
+            stesa1[j] = 0
+            stesa2[j] = 0
+        else:
+            stesa0[j] = 0
+            stesa1[j] = 0
+            stesa2[j] = 0
+
+    stesa0= stesa0.reshape(h,w)
+    stesa1 = stesa1.reshape(h, w)
+    stesa2 = stesa2.reshape(h, w)
+    restructured= torch.stack((stesa0,stesa1,stesa2), dim=2)
+    print(restructured.shape) # controllare sotto
+    a,b,z= restructured[:,:,0].unique(return_counts=True, return_inverse=True)
+
+    blocco= restructured[restructured[:,:,0]==128]
+    restructured = np.array(restructured)
+    cv2.imshow('res', restructured)
+    cv2.waitKey(0)
+    # una volta che ho solo un colore posso fare bbox, con canny e bordi per disegnare il rettangolo
+
+    drawing_bbox(image, restructured)
