@@ -9,6 +9,8 @@ Computer vision project
 
  ## Title:
  ## Computer Vision for improving the Cloth E-Commerce experience
+ 
+![nome](utils/head.jpg)
 
 ## Abstract:
 
@@ -25,5 +27,3 @@ and provide some recommendation on what he/she would like according to similar i
 in our dataset. For the last step, the goal is to apply geometric transformations to our
 recommended clothes pictures to fit them on our customer body to see how the product
 fits.
-
-![nome](utils/head.jpg)
