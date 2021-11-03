@@ -1,5 +1,5 @@
 # vision project
- computer vision project
+Computer vision project 
 
  gruppo 16: per l'esame
 
