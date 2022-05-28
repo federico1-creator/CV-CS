@@ -3,9 +3,9 @@ Computer vision project
 
  gruppo 16: per l'esame
 
- - Federico
- - Riccardo
- - Eros
+ - Federico Cocchi
+ - Riccardo Agazzotti
+ - Eros Bignardi
 
  ## Title:
  ## Computer Vision for improving the Cloth E-Commerce experience
